@@ -200,7 +200,7 @@ echo " RemnaShop: интерактивная автоустановка"
 echo "=========================================="
 echo
 
-prompt "APP_DIR" "Папка установки" "/opt/remnashop"
+prompt "APP_DIR" "Папка установки" "/opt/remnashop_new"
 prompt "SERVICE_USER" "Системный пользователь сервисов" "remnashop"
 prompt "SERVICE_GROUP" "Системная группа сервисов" "${SERVICE_USER}"
 prompt "WEB_DOMAIN" "Домен админ-панели (например panel.example.com)" "panel.example.com"
