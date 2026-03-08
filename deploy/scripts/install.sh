@@ -123,6 +123,41 @@ require_non_empty() {
   printf -v "${var_name}" "%s" "${value}"
 }
 
+normalize_admin_ids() {
+  local raw="${1:-}"
+  local stripped
+  local part
+  local ids=()
+
+  stripped="${raw//[[:space:]]/}"
+  if [[ -z "${stripped}" ]]; then
+    echo "[]"
+    return
+  fi
+
+  if [[ "${stripped}" =~ ^\[(.*)\]$ ]]; then
+    stripped="${BASH_REMATCH[1]}"
+  fi
+
+  IFS=',' read -r -a parts <<<"${stripped}"
+  for part in "${parts[@]}"; do
+    [[ -z "${part}" ]] && continue
+    if [[ ! "${part}" =~ ^[0-9]+$ ]]; then
+      echo "Ошибка: BOT_ADMIN_IDS должен содержать только числа через запятую." >&2
+      exit 1
+    fi
+    ids+=("${part}")
+  done
+
+  if [[ "${#ids[@]}" -eq 0 ]]; then
+    echo "[]"
+  else
+    local joined
+    joined="$(IFS=,; echo "${ids[*]}")"
+    echo "[${joined}]"
+  fi
+}
+
 normalize_single_line() {
   local var_name="$1"
   local value="${!var_name:-}"
@@ -223,6 +258,8 @@ for v in BOT_TOKEN BOT_ADMIN_IDS SUPPORT_USERNAME ADMIN_USERNAME ADMIN_PASSWORD 
   assert_ascii "${v}"
 done
 
+BOT_ADMIN_IDS_JSON="$(normalize_admin_ids "${BOT_ADMIN_IDS}")"
+
 SESSION_SECRET="$(gen_secret)"
 DATABASE_URL="sqlite+aiosqlite:///${APP_DIR}/data/remnashop.db"
 BACKUP_DIR="${APP_DIR}/backups"
@@ -301,7 +338,7 @@ echo "==> Генерация .env"
   printf 'DATABASE_URL=%s\n' "$(env_quote "${DATABASE_URL}")"
   printf '\n'
   printf 'BOT_TOKEN=%s\n' "$(env_quote "${BOT_TOKEN}")"
-  printf 'BOT_ADMIN_IDS=%s\n' "$(env_quote "${BOT_ADMIN_IDS}")"
+  printf 'BOT_ADMIN_IDS=%s\n' "$(env_quote "${BOT_ADMIN_IDS_JSON}")"
   printf 'SUPPORT_USERNAME=%s\n' "$(env_quote "${SUPPORT_USERNAME}")"
   printf '\n'
   printf 'ADMIN_USERNAME=%s\n' "$(env_quote "${ADMIN_USERNAME}")"
