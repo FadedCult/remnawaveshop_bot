@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from functools import lru_cache
 from typing import Any
 
@@ -50,10 +51,24 @@ class Settings(BaseSettings):
     def parse_bot_admin_ids(cls, value: Any) -> list[int]:
         if value is None:
             return []
+        if isinstance(value, (int, float)):
+            return [int(value)]
         if isinstance(value, list):
             return [int(v) for v in value]
+        if isinstance(value, (tuple, set)):
+            return [int(v) for v in value]
         if isinstance(value, str):
-            raw = [part.strip() for part in value.split(",") if part.strip()]
+            cleaned = value.strip()
+            if not cleaned:
+                return []
+            if cleaned.startswith("["):
+                try:
+                    parsed = json.loads(cleaned)
+                    if isinstance(parsed, list):
+                        return [int(v) for v in parsed]
+                except json.JSONDecodeError:
+                    pass
+            raw = [part.strip() for part in cleaned.split(",") if part.strip()]
             return [int(v) for v in raw]
         raise ValueError("BOT_ADMIN_IDS must be a comma-separated list of integers")
 
@@ -65,4 +80,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

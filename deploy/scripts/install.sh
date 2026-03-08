@@ -5,6 +5,9 @@ set -euo pipefail
 # Usage:
 #   bash deploy/scripts/install.sh
 
+export LANG="${LANG:-C.UTF-8}"
+export LC_ALL="${LC_ALL:-C.UTF-8}"
+
 if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]; then
   echo "Требуется Bash >= 4"
   exit 1
@@ -120,6 +123,35 @@ require_non_empty() {
   printf -v "${var_name}" "%s" "${value}"
 }
 
+normalize_single_line() {
+  local var_name="$1"
+  local value="${!var_name:-}"
+  value="${value//$'\r'/}"
+  value="${value//$'\n'/}"
+  printf -v "${var_name}" "%s" "${value}"
+}
+
+assert_ascii() {
+  local var_name="$1"
+  local value="${!var_name:-}"
+  if [[ -z "${value}" ]]; then
+    return
+  fi
+  if LC_ALL=C grep -q '[^ -~]' <<<"${value}"; then
+    echo "Ошибка: ${var_name} содержит не-ASCII символы."
+    echo "Используйте только латиницу/цифры/символы (без кириллицы)."
+    exit 1
+  fi
+}
+
+env_quote() {
+  local value="${1-}"
+  value="${value//\\/\\\\}"
+  value="${value//\$/\\\$}"
+  value="${value//\"/\\\"}"
+  printf '"%s"' "${value}"
+}
+
 gen_secret() {
   if command -v openssl >/dev/null 2>&1; then
     openssl rand -hex 32
@@ -182,6 +214,14 @@ if [[ "${INSTALL_NGINX}" == "true" ]]; then
 fi
 
 prompt_yes_no "ENABLE_BACKUP_CRON" "Добавить cron на backup каждые 6 часов?" "y"
+
+for v in BOT_TOKEN BOT_ADMIN_IDS SUPPORT_USERNAME ADMIN_USERNAME ADMIN_PASSWORD REMNAWAVE_BASE_URL REMNAWAVE_API_KEY PAYMENT_PROVIDER PAYMENT_API_KEY PAYMENT_WEBHOOK_SECRET WEB_DOMAIN TIMEZONE ENVIRONMENT CERTBOT_EMAIL; do
+  normalize_single_line "${v}"
+done
+
+for v in BOT_TOKEN BOT_ADMIN_IDS SUPPORT_USERNAME ADMIN_USERNAME ADMIN_PASSWORD REMNAWAVE_BASE_URL REMNAWAVE_API_KEY PAYMENT_PROVIDER PAYMENT_API_KEY PAYMENT_WEBHOOK_SECRET WEB_DOMAIN TIMEZONE ENVIRONMENT CERTBOT_EMAIL; do
+  assert_ascii "${v}"
+done
 
 SESSION_SECRET="$(gen_secret)"
 DATABASE_URL="sqlite+aiosqlite:///${APP_DIR}/data/remnashop.db"
@@ -252,41 +292,41 @@ run_as_user "${SERVICE_USER}" "${APP_DIR}/.venv/bin/pip" install --upgrade pip s
 run_as_user "${SERVICE_USER}" "${APP_DIR}/.venv/bin/pip" install -e "${APP_DIR}"
 
 echo "==> Генерация .env"
-run_root tee "${APP_DIR}/.env" >/dev/null <<EOF
-APP_NAME=RemnaShop
-ENVIRONMENT=${ENVIRONMENT}
-BASE_URL=https://${WEB_DOMAIN}
-TIMEZONE=${TIMEZONE}
-
-DATABASE_URL=${DATABASE_URL}
-
-BOT_TOKEN=${BOT_TOKEN}
-BOT_ADMIN_IDS=${BOT_ADMIN_IDS}
-SUPPORT_USERNAME=${SUPPORT_USERNAME}
-
-ADMIN_USERNAME=${ADMIN_USERNAME}
-ADMIN_PASSWORD=${ADMIN_PASSWORD}
-SESSION_SECRET=${SESSION_SECRET}
-
-WEB_HOST=127.0.0.1
-WEB_PORT=${WEB_PORT}
-WEB_DOMAIN=${WEB_DOMAIN}
-
-REMNAWAVE_BASE_URL=${REMNAWAVE_BASE_URL}
-REMNAWAVE_API_KEY=${REMNAWAVE_API_KEY}
-REMNAWAVE_TIMEOUT=20
-REMNAWAVE_USERS_PATH=/users
-REMNAWAVE_SUBSCRIPTIONS_PATH=/subscriptions
-REMNAWAVE_SERVERS_PATH=/servers
-REMNAWAVE_NODES_PATH=/nodes
-REMNAWAVE_STATS_PATH=/stats
-
-PAYMENT_PROVIDER=${PAYMENT_PROVIDER}
-PAYMENT_API_KEY=${PAYMENT_API_KEY}
-PAYMENT_WEBHOOK_SECRET=${PAYMENT_WEBHOOK_SECRET}
-
-BACKUP_DIR=${BACKUP_DIR}
-EOF
+{
+  printf 'APP_NAME=%s\n' "$(env_quote 'RemnaShop')"
+  printf 'ENVIRONMENT=%s\n' "$(env_quote "${ENVIRONMENT}")"
+  printf 'BASE_URL=%s\n' "$(env_quote "https://${WEB_DOMAIN}")"
+  printf 'TIMEZONE=%s\n' "$(env_quote "${TIMEZONE}")"
+  printf '\n'
+  printf 'DATABASE_URL=%s\n' "$(env_quote "${DATABASE_URL}")"
+  printf '\n'
+  printf 'BOT_TOKEN=%s\n' "$(env_quote "${BOT_TOKEN}")"
+  printf 'BOT_ADMIN_IDS=%s\n' "$(env_quote "${BOT_ADMIN_IDS}")"
+  printf 'SUPPORT_USERNAME=%s\n' "$(env_quote "${SUPPORT_USERNAME}")"
+  printf '\n'
+  printf 'ADMIN_USERNAME=%s\n' "$(env_quote "${ADMIN_USERNAME}")"
+  printf 'ADMIN_PASSWORD=%s\n' "$(env_quote "${ADMIN_PASSWORD}")"
+  printf 'SESSION_SECRET=%s\n' "$(env_quote "${SESSION_SECRET}")"
+  printf '\n'
+  printf 'WEB_HOST=%s\n' "$(env_quote '127.0.0.1')"
+  printf 'WEB_PORT=%s\n' "$(env_quote "${WEB_PORT}")"
+  printf 'WEB_DOMAIN=%s\n' "$(env_quote "${WEB_DOMAIN}")"
+  printf '\n'
+  printf 'REMNAWAVE_BASE_URL=%s\n' "$(env_quote "${REMNAWAVE_BASE_URL}")"
+  printf 'REMNAWAVE_API_KEY=%s\n' "$(env_quote "${REMNAWAVE_API_KEY}")"
+  printf 'REMNAWAVE_TIMEOUT=%s\n' "$(env_quote '20')"
+  printf 'REMNAWAVE_USERS_PATH=%s\n' "$(env_quote '/users')"
+  printf 'REMNAWAVE_SUBSCRIPTIONS_PATH=%s\n' "$(env_quote '/subscriptions')"
+  printf 'REMNAWAVE_SERVERS_PATH=%s\n' "$(env_quote '/servers')"
+  printf 'REMNAWAVE_NODES_PATH=%s\n' "$(env_quote '/nodes')"
+  printf 'REMNAWAVE_STATS_PATH=%s\n' "$(env_quote '/stats')"
+  printf '\n'
+  printf 'PAYMENT_PROVIDER=%s\n' "$(env_quote "${PAYMENT_PROVIDER}")"
+  printf 'PAYMENT_API_KEY=%s\n' "$(env_quote "${PAYMENT_API_KEY}")"
+  printf 'PAYMENT_WEBHOOK_SECRET=%s\n' "$(env_quote "${PAYMENT_WEBHOOK_SECRET}")"
+  printf '\n'
+  printf 'BACKUP_DIR=%s\n' "$(env_quote "${BACKUP_DIR}")"
+} | run_root tee "${APP_DIR}/.env" >/dev/null
 
 run_root chown "${SERVICE_USER}:${SERVICE_GROUP}" "${APP_DIR}/.env"
 run_root chmod 600 "${APP_DIR}/.env"
