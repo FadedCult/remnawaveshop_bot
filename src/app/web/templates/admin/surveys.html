@@ -1,0 +1,35 @@
+{% extends "admin/base.html" %}
+{% set title = "Опросы" %}
+{% block content %}
+  <article class="card">
+    <h3>Создать опрос</h3>
+    <form method="post" action="/admin/surveys/create">
+      <textarea name="question" placeholder="Вопрос опроса" required></textarea>
+      <label>
+        <input type="checkbox" name="send_now" checked>
+        Сразу отправить всем пользователям
+      </label>
+      <button type="submit">Создать</button>
+    </form>
+  </article>
+
+  <h3>Список опросов</h3>
+  {% for survey in surveys %}
+    <article class="card">
+      <h4>#{{ survey.id }} {% if survey.is_active %}[active]{% else %}[closed]{% endif %}</h4>
+      <p>{{ survey.question }}</p>
+      <p class="muted">Ответов: {{ survey.answers|length }}</p>
+      <details>
+        <summary>Показать ответы</summary>
+        {% for answer in survey.answers %}
+          <p><span class="mono">{{ answer.user_id }}</span>: {{ answer.answer_text }}</p>
+        {% endfor %}
+      </details>
+      {% if survey.is_active %}
+      <form method="post" action="/admin/surveys/{{ survey.id }}/close">
+        <button type="submit" class="danger">Закрыть опрос</button>
+      </form>
+      {% endif %}
+    </article>
+  {% endfor %}
+{% endblock %}

@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  web:
+    build: ..
+    command: python scripts/run_web.py
+    env_file:
+      - ../.env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../data:/app/data
+      - ../backups:/app/backups
+
+  bot:
+    build: ..
+    command: python scripts/run_bot.py
+    env_file:
+      - ../.env
+    depends_on:
+      - web
+    volumes:
+      - ../data:/app/data

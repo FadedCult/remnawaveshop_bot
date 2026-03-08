@@ -1,0 +1,34 @@
+{% extends "admin/base.html" %}
+{% set title = "Поддержка и тикеты" %}
+{% block content %}
+  <form method="get" action="/admin/tickets">
+    <div class="form-grid">
+      <select name="status">
+        <option value="">Все</option>
+        <option value="open" {% if status == "open" %}selected{% endif %}>open</option>
+        <option value="in_progress" {% if status == "in_progress" %}selected{% endif %}>in_progress</option>
+        <option value="closed" {% if status == "closed" %}selected{% endif %}>closed</option>
+      </select>
+      <button type="submit" class="secondary">Фильтровать</button>
+    </div>
+  </form>
+
+  {% for ticket in tickets %}
+    <article class="card">
+      <h3>#{{ ticket.id }} [{{ ticket.status.value }}] {{ ticket.subject }}</h3>
+      <p>Пользователь: <span class="mono">{{ ticket.user.telegram_id if ticket.user else "-" }}</span></p>
+      <div>
+        {% for msg in ticket.messages %}
+          <p><b>{{ msg.sender_role.value }}</b> ({{ msg.created_at }}): {{ msg.text }}</p>
+        {% endfor %}
+      </div>
+      <form method="post" action="/admin/tickets/{{ ticket.id }}/reply">
+        <textarea name="text" placeholder="Ответ пользователю" required></textarea>
+        <button type="submit">Ответить</button>
+      </form>
+      <form method="post" action="/admin/tickets/{{ ticket.id }}/close">
+        <button type="submit" class="danger">Закрыть тикет</button>
+      </form>
+    </article>
+  {% endfor %}
+{% endblock %}

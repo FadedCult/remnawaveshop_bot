@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .center {
+      max-width: 420px;
+      margin: 8vh auto;
+      background: rgba(255,255,255,.93);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+    }
+  </style>
+</head>
+<body>
+  <section class="center">
+    <h2>Вход в админ-панель</h2>
+    <p class="muted">Единый логин/пароль, задается в .env</p>
+    {% if error %}
+      <div class="flash-error">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="/admin/login">
+      <label>Логин</label>
+      <input name="username" required>
+      <label>Пароль</label>
+      <input type="password" name="password" required>
+      <button type="submit">Войти</button>
+    </form>
+  </section>
+</body>
+</html>

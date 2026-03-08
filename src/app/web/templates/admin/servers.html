@@ -1,0 +1,40 @@
+{% extends "admin/base.html" %}
+{% set title = "Сервера Remnawave" %}
+{% block content %}
+  <article class="card">
+    <form method="post" action="/admin/servers/sync">
+      <button type="submit">Синхронизация</button>
+    </form>
+  </article>
+
+  <article class="card">
+    <h3>Общая статистика</h3>
+    <pre class="mono">{{ stats }}</pre>
+  </article>
+
+  <h3>Последние снапшоты серверов/нод</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Время</th>
+        <th>Сервер</th>
+        <th>Нода</th>
+        <th>Статус</th>
+        <th>Load %</th>
+        <th>Online</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for snap in snapshots %}
+      <tr>
+        <td>{{ snap.synced_at }}</td>
+        <td>{{ snap.server_name }}</td>
+        <td>{{ snap.node_id or "-" }}</td>
+        <td>{{ snap.status }}</td>
+        <td>{{ snap.load_percent or "-" }}</td>
+        <td>{{ snap.users_online or "-" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

@@ -1,0 +1,16 @@
+[Unit]
+Description=RemnaShop Telegram bot
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/remnashop
+EnvironmentFile=/opt/remnashop/.env
+ExecStart=/opt/remnashop/.venv/bin/python scripts/run_bot.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

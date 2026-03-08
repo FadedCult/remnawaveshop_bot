@@ -1,0 +1,42 @@
+{% extends "admin/base.html" %}
+{% set title = "Тарифы" %}
+{% block content %}
+  <h3>Создать тариф</h3>
+  <form method="post" action="/admin/tariffs/create">
+    <div class="form-grid">
+      <input name="name" placeholder="Название" required>
+      <input name="price" placeholder="Цена" required>
+      <input name="currency" value="RUB" placeholder="Валюта">
+      <input name="duration_days" placeholder="Дней" required>
+      <input name="traffic_limit_gb" placeholder="Лимит GB (пусто=безлимит)">
+      <input name="remnawave_plan_id" placeholder="Remnawave plan_id">
+    </div>
+    <textarea name="description" placeholder="Описание"></textarea>
+    <button type="submit">Создать тариф</button>
+  </form>
+
+  <h3>Существующие тарифы</h3>
+  {% for tariff in tariffs %}
+    <article class="card">
+      <form method="post" action="/admin/tariffs/{{ tariff.id }}/update">
+        <div class="form-grid">
+          <input name="name" value="{{ tariff.name }}" required>
+          <input name="price" value="{{ tariff.price }}" required>
+          <input name="currency" value="{{ tariff.currency }}" required>
+          <input name="duration_days" value="{{ tariff.duration_days }}" required>
+          <input name="traffic_limit_gb" value="{{ tariff.traffic_limit_gb or '' }}">
+          <input name="remnawave_plan_id" value="{{ tariff.remnawave_plan_id or '' }}">
+        </div>
+        <textarea name="description">{{ tariff.description or "" }}</textarea>
+        <label>
+          <input type="checkbox" name="is_active" {% if tariff.is_active %}checked{% endif %}>
+          Активен
+        </label>
+        <button type="submit">Сохранить</button>
+      </form>
+      <form method="post" action="/admin/tariffs/{{ tariff.id }}/delete">
+        <button type="submit" class="danger">Удалить</button>
+      </form>
+    </article>
+  {% endfor %}
+{% endblock %}

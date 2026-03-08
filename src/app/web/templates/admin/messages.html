@@ -1,0 +1,56 @@
+{% extends "admin/base.html" %}
+{% set title = "Сообщения и промо" %}
+{% block content %}
+  <article class="card">
+    <h3>Новая рассылка / промо</h3>
+    <form method="post" action="/admin/messages/send">
+      <div class="form-grid">
+        <input name="title" placeholder="Заголовок" required>
+        <select name="target_group">
+          {% for segment in segments %}
+            <option value="{{ segment.value }}">{{ segment.value }}</option>
+          {% endfor %}
+        </select>
+        <select name="kind">
+          <option value="broadcast">broadcast</option>
+          <option value="promo">promo</option>
+          <option value="survey">survey</option>
+        </select>
+        <input name="image_url" placeholder="URL изображения (опционально)">
+        <input name="periodic_cron" placeholder="Интервал в минутах (для периодики)">
+      </div>
+      <label>
+        <input type="checkbox" name="periodic_enabled">
+        Периодическая отправка (если включено, immediate-отправка выключается)
+      </label>
+      <textarea name="content" placeholder="Текст сообщения" required></textarea>
+      <button type="submit">Сохранить и отправить</button>
+    </form>
+  </article>
+
+  <h3>История рассылок</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Тип</th>
+        <th>Сегмент</th>
+        <th>Заголовок</th>
+        <th>Периодика</th>
+        <th>Последняя отправка</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in broadcasts %}
+      <tr>
+        <td>{{ item.id }}</td>
+        <td>{{ item.kind.value }}</td>
+        <td>{{ item.target_group.value }}</td>
+        <td>{{ item.title }}</td>
+        <td>{{ "on" if item.periodic_enabled else "off" }} {{ item.periodic_cron or "" }}</td>
+        <td>{{ item.last_sent_at or "-" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "admin/base.html" %}
+{% set title = "Пользователь" %}
+{% block content %}
+  <article class="card">
+    <h3>{{ user.full_name or user.username or "Пользователь" }}</h3>
+    <p>Telegram ID: <span class="mono">{{ user.telegram_id }}</span></p>
+    <p>Баланс: {{ user.balance }}</p>
+    <p>Язык: {{ user.language.value }}</p>
+    <p>Remnawave User ID: <span class="mono">{{ user.remnawave_user_id or "-" }}</span></p>
+  </article>
+
+  <article class="card">
+    <h3>Подписка</h3>
+    {% if subscription %}
+      <p>Статус: {{ subscription.status.value }}</p>
+      <p>Тариф: {{ tariff.name if tariff else "-" }}</p>
+      <p>Срок: {{ subscription.start_at }} → {{ subscription.end_at }}</p>
+      <p>Трафик: {{ subscription.traffic_used_gb }} / {{ subscription.traffic_limit_gb or "∞" }} GB</p>
+      <p>Connect URL: <span class="mono">{{ subscription.connect_url or "-" }}</span></p>
+    {% else %}
+      <p>Нет активной подписки.</p>
+    {% endif %}
+  </article>
+
+  <article class="card">
+    <h3>Управление балансом</h3>
+    <form method="post" action="/admin/users/{{ user.id }}/balance">
+      <input name="amount" placeholder="Например: 100.00 или -50.00" required>
+      <button type="submit">Применить</button>
+    </form>
+  </article>
+
+  <article class="card">
+    <h3>Сообщение пользователю</h3>
+    <form method="post" action="/admin/users/{{ user.id }}/message">
+      <textarea name="text" placeholder="Текст сообщения" required></textarea>
+      <button type="submit" class="secondary">Отправить через Telegram</button>
+    </form>
+  </article>
+
+  <article class="card">
+    <h3>Опасная зона</h3>
+    <form method="post" action="/admin/users/{{ user.id }}/delete">
+      <button type="submit" class="danger">Полностью удалить пользователя</button>
+    </form>
+  </article>
+{% endblock %}

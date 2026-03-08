@@ -1,0 +1,50 @@
+{% extends "admin/base.html" %}
+{% set title = "Дашборд" %}
+{% block content %}
+  <div class="grid">
+    <article class="card">
+      <h3>{{ total_users }}</h3>
+      <div class="muted">Всего пользователей</div>
+    </article>
+    <article class="card">
+      <h3>{{ active_subscriptions }}</h3>
+      <div class="muted">Активные подписки</div>
+    </article>
+    <article class="card">
+      <h3>{{ new_users_7d }}</h3>
+      <div class="muted">Новые за 7 дней</div>
+    </article>
+    <article class="card">
+      <h3>{{ open_tickets }}</h3>
+      <div class="muted">Открытые тикеты</div>
+    </article>
+    <article class="card">
+      <h3>{{ surveys_active }}</h3>
+      <div class="muted">Активные опросы</div>
+    </article>
+  </div>
+
+  <h3>Последние действия админов</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Время</th>
+        <th>Админ</th>
+        <th>Действие</th>
+        <th>Сущность</th>
+        <th>ID</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for action in actions %}
+      <tr>
+        <td>{{ action.created_at }}</td>
+        <td>{{ action.admin_login }}</td>
+        <td>{{ action.action }}</td>
+        <td>{{ action.entity }}</td>
+        <td class="mono">{{ action.entity_id or "-" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

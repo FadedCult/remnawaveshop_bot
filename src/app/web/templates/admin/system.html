@@ -1,0 +1,43 @@
+{% extends "admin/base.html" %}
+{% set title = "Система и интеграции" %}
+{% block content %}
+  <div class="grid">
+    <article class="card">
+      <h3>Telegram</h3>
+      <p>Configured: {{ integrations.telegram.configured }}</p>
+      <p>Admin IDs: {{ integrations.telegram.admins }}</p>
+    </article>
+    <article class="card">
+      <h3>Remnawave</h3>
+      <p>Configured: {{ integrations.remnawave.configured }}</p>
+      <p>URL: {{ integrations.remnawave.base_url }}</p>
+    </article>
+    <article class="card">
+      <h3>Payments</h3>
+      <p>Provider: {{ integrations.payments.provider }}</p>
+      <p>API key configured: {{ integrations.payments.configured }}</p>
+      <p>Webhook secret configured: {{ integrations.payments.webhook_configured }}</p>
+    </article>
+  </div>
+
+  <article class="card">
+    <h3>Генератор hash для ADMIN_PASSWORD_HASH</h3>
+    <form method="post" action="/admin/system/hash-password">
+      <input type="password" name="raw_password" placeholder="Введите пароль" required>
+      <button type="submit">Сгенерировать hash</button>
+    </form>
+    {% if generated_hash %}
+      <p>Скопируйте в `.env`:</p>
+      <pre class="mono">{{ generated_hash }}</pre>
+    {% endif %}
+  </article>
+
+  <article class="card">
+    <h3>Текущие настройки окружения</h3>
+    <p>App: {{ settings.app_name }} ({{ settings.environment }})</p>
+    <p>DB: <span class="mono">{{ settings.database_url }}</span></p>
+    <p>Web: {{ settings.web_domain }}:{{ settings.web_port }}</p>
+    <p>Timezone: {{ settings.timezone }}</p>
+    <p>Backup dir: <span class="mono">{{ settings.backup_dir }}</span></p>
+  </article>
+{% endblock %}
